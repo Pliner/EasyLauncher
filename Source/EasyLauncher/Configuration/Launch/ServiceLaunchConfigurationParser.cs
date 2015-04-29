@@ -1,5 +1,6 @@
 ﻿using System;
 using CommandLine;
+using EasyLauncher.Configuration.Services;
 
 namespace EasyLauncher.Configuration.Launch
 {
@@ -33,16 +34,16 @@ namespace EasyLauncher.Configuration.Launch
 
         private class Options
         {
-            [OptionArray('g', "groups", DefaultValue = new [] {"Default"})]
+            [OptionArray("groups", DefaultValue = new [] {"Default"})]
             public string[] Groups { get; set; }
 
-            [Option('c', "config", Required = true)]
+            [Option("config", Required = true)]
             public string Filename { get; set; }
 
-            [Option('t', "configType", DefaultValue = ServiceConfigurationType.Auto)]
+            [Option("configType", DefaultValue = ServiceConfigurationType.Auto)]
             public ServiceConfigurationType Type { get; set; }
 
-            [Option('b', "basePath", Required = true)]
+            [Option("basePath", Required = true)]
             public string BasePath { get; set; }
         }
     }

@@ -12,49 +12,77 @@ namespace EasyLauncher
 
     public interface IServiceLauncher
     {
-        void Start(ServiceParameters serviceParameters);
-        void StopAll();
-        bool IsAllStopped();
+        void Start(IEnumerable<ServiceParameters> servicesParameters);
+        void WaitUntilStop();
     }
 
-    public sealed class ServiceLauncher : IServiceLauncher
+    public sealed class ConsoleServicesLauncher : IServiceLauncher
     {
         private readonly object syncLock = new object();
+        private readonly TimeSpan timeout = TimeSpan.FromMilliseconds(500);
 
         private readonly List<IProcess> processes = new List<IProcess>(); 
         private readonly IProcessLauncher processLauncher;
         private readonly IOutput output;
+        private readonly IConsoleHandler consoleHandler;
+        private readonly IThreadSleeper threadSleeper;
 
-        public ServiceLauncher(IProcessLauncher processLauncher, IOutput output)
+        public ConsoleServicesLauncher(IProcessLauncher processLauncher,
+                               IOutput output, 
+                               IConsoleHandler consoleHandler,
+                               IThreadSleeper threadSleeper)
         {
             this.processLauncher = processLauncher;
             this.output = output;
+            this.consoleHandler = consoleHandler;
+            this.threadSleeper = threadSleeper;
         }
 
-        public void Start(ServiceParameters serviceParameters)
+        public void Start(IEnumerable<ServiceParameters> servicesParameters)
         {
-            lock (syncLock)
+            consoleHandler.AddStopHandler(StopAll);
+            foreach (var serviceParameters in servicesParameters)
             {
-                try
+                lock (syncLock)
                 {
-                    output.Info(string.Format("Starting {0}...", serviceParameters.Name));
-                    var process = processLauncher.Launch(serviceParameters);
-                    process.OnExit += (sender, args) => output.Error(string.Format("ServiceConfiguration {0} has exited", process.Name));
-                    processes.Add(process);
-                    output.Info(string.Format("Service {0} started", serviceParameters.Name));
+                    try
+                    {
+                        output.Info(string.Format("Starting {0}...", serviceParameters.Name));
+                        var process = processLauncher.Launch(serviceParameters);
+                        process.OnExit += (sender, args) => output.Error(string.Format("ServiceConfiguration {0} has exited", process.Name));
+                        processes.Add(process);
+                        output.Info(string.Format("Service {0} started", serviceParameters.Name));
+                    }
+                    catch (Exception exception)
+                    {
+                        output.Error(string.Format("Service {0} failed to start", serviceParameters.Name), exception);
+                    }
                 }
-                catch (Exception exception)
-                {
-                    output.Error(string.Format("Service {0} failed to start", serviceParameters.Name), exception);
-                }
+                threadSleeper.Sleep(timeout);
             }
+            output.Info("Waiting for services...");
         }
 
-        public void StopAll()
+        public void WaitUntilStop()
+        {
+            while (true)
+            {
+                lock (syncLock)
+                {
+                    if (processes.All(x => x.IsStopped))
+                        break;
+                }
+                threadSleeper.Sleep(timeout);
+            }
+            consoleHandler.RemoveAll();
+        }
+
+        private void StopAll()
         {
             lock (syncLock)
             {
                 foreach (var process in processes)
+                {
                     try
                     {
                         process.Kill();
@@ -63,14 +91,9 @@ namespace EasyLauncher
                     {
                         output.Error(string.Format("Service {0} failed to stop", process.Name), exception);
                     }
+                }
                 processes.Clear();
             }
-        }
-
-        public bool IsAllStopped()
-        {
-            lock (syncLock)
-                return processes.All(x => x.IsStopped);
         }
     }
 }

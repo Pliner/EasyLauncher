@@ -1,41 +1,35 @@
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace EasyLauncher
 {
     public interface IConsoleHandler
     {
-        void Set();
-        void Unset();
+        void AddStopHandler(Action action);
+        void RemoveAll();
     }
 
-    public class ConsoleHandler : IConsoleHandler
+    public sealed class ConsoleHandler : IConsoleHandler
     {
-        private readonly Action onStop;
-        private bool isSet;
+        private readonly ConcurrentDictionary<HandlerRoutine, object> actions = new ConcurrentDictionary<HandlerRoutine, object>();  
 
-        public ConsoleHandler(Action onStop)
+        public void AddStopHandler(Action action)
         {
-            this.onStop = onStop;
+            HandlerRoutine handler = dwCtrlType => ConsoleCtrlHandler(dwCtrlType, action);
+            actions.TryAdd(handler, null);
+            SetConsoleCtrlHandler(handler, true);
         }
 
-        public void Set()
+        public void RemoveAll()
         {
-            if (isSet)
-                return;
-            SetConsoleCtrlHandler(ConsoleCtrlHandler, true);
-            isSet = true;
+            foreach (var handler in actions.Keys)
+            {
+                SetConsoleCtrlHandler(handler, false);
+            }
         }
 
-        public void Unset()
-        {
-            if (!isSet)
-                return;
-            SetConsoleCtrlHandler(ConsoleCtrlHandler, false);
-            isSet = false;
-        }
-
-        private bool ConsoleCtrlHandler(uint dwCtrlType)
+        private static bool ConsoleCtrlHandler(uint dwCtrlType, Action action)
         {
             try
             {
@@ -45,7 +39,7 @@ namespace EasyLauncher
                     case CTRL_BREAK_EVENT:
                     case CTRL_CLOSE_EVENT:
                     case CTRL_SHUTDOWN_EVENT:
-                        onStop();
+                        action();
                         break;
                 }
             }

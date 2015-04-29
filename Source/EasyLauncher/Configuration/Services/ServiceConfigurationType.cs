@@ -1,4 +1,4 @@
-﻿namespace EasyLauncher.Configuration.Launch
+﻿namespace EasyLauncher.Configuration.Services
 {
     public enum ServiceConfigurationType
     {

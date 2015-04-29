@@ -1,4 +1,6 @@
-﻿namespace EasyLauncher.Configuration.Launch
+﻿using EasyLauncher.Configuration.Services;
+
+namespace EasyLauncher.Configuration.Launch
 {
     public class ServiceLaunchConfiguration
     {

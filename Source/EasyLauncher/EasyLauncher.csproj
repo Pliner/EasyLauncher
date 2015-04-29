@@ -51,7 +51,7 @@
   <ItemGroup>
     <Compile Include="Configuration\Launch\ServiceLaunchConfiguration.cs" />
     <Compile Include="Configuration\Launch\ServiceLaunchConfigurationParser.cs" />
-    <Compile Include="Configuration\Launch\ServiceConfigurationType.cs" />
+    <Compile Include="Configuration\Services\ServiceConfigurationType.cs" />
     <Compile Include="Configuration\Services\Ini\IniConfigurationParser.cs" />
     <Compile Include="Configuration\Services\IServicesConfigurationParser.cs" />
     <Compile Include="EntryPoint.cs" />
@@ -66,6 +66,7 @@
     <Compile Include="Configuration\Services\ServicesConfiguration.cs" />
     <Compile Include="Configuration\Services\ServicesConfigurationGroup.cs" />
     <Compile Include="ServicesLauncher.cs" />
+    <Compile Include="ThreadSleeper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -80,26 +81,15 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\ILRepack.MSBuild.Task.1.0.9\build\ILRepack.MSBuild.Task.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\ILRepack.MSBuild.Task.1.0.9\build\ILRepack.MSBuild.Task.targets'))" />
   </Target>
-	<Target Name="AfterBuild" Condition="'$(Configuration)' == 'Release'">
-
-	   <ItemGroup>
-		<InputAssemblies Include="$(OutputPath)\EasyLauncher.exe" />
-		<InputAssemblies Include="$(OutputPath)\CommandLine.dll" />
-		<InputAssemblies Include="$(OutputPath)\SharpConfig.dll" />
-		<InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
-	   </ItemGroup>
-
-	   <ItemGroup>
-	   </ItemGroup>
-
-	   <ILRepack 
-		Parallel="true"
-		Internalize="true"
-		InternalizeExclude="@(DoNotInternalizeAssemblies)"
-		InputAssemblies="@(InputAssemblies)"
-		TargetKind="Exe"
-		OutputFile="..\..\Build\EasyLauncher.exe"
-	   />
-
-	</Target>
+  <Target Name="AfterBuild" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)\EasyLauncher.exe" />
+      <InputAssemblies Include="$(OutputPath)\CommandLine.dll" />
+      <InputAssemblies Include="$(OutputPath)\SharpConfig.dll" />
+      <InputAssemblies Include="$(OutputPath)\Newtonsoft.Json.dll" />
+    </ItemGroup>
+    <ItemGroup>
+    </ItemGroup>
+    <ILRepack Parallel="true" Internalize="true" InternalizeExclude="@(DoNotInternalizeAssemblies)" InputAssemblies="@(InputAssemblies)" TargetKind="Exe" OutputFile="..\..\Build\EasyLauncher.exe" />
+  </Target>
 </Project>

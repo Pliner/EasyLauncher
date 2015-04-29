@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Threading;
 using EasyLauncher.Configuration.Launch;
 using EasyLauncher.Configuration.Services;
 using EasyLauncher.Configuration.Services.Ini;
@@ -12,13 +11,13 @@ namespace EasyLauncher
     {
         public static void Main(string[] args)
         {
-
             var launchConfigurationParser = new ConsoleServiceLaunchConfigurationParser(args);
             var launchConfiguration = launchConfigurationParser.Parse();
             var processLauncher = new ProcessLauncher();
             var consoleOutput = new ConsoleOutput();
-            var launcher = new ServiceLauncher(processLauncher, consoleOutput);
-            
+            var threadSleeper = new ThreadSleeper();
+            var consoleHandler = new ConsoleHandler();
+            var launcher = new ConsoleServicesLauncher(processLauncher, consoleOutput, consoleHandler, threadSleeper);
             var configurationParser = (launchConfiguration.Type == ServiceConfigurationType.Ini || launchConfiguration.Type == ServiceConfigurationType.Auto)
                 ? (IServicesConfigurationParser)new IniConfigurationParser()
                 : new JsonConfigurationParser();
@@ -29,23 +28,13 @@ namespace EasyLauncher
                 .OrderByDescending(x => x.Priority)
                 .SelectMany(x => x.Services)
                 .OrderByDescending(x => x.Priority);
-            foreach (var serviceConfiguration in serviceConfigurations)
+            var servicesParameters = serviceConfigurations.Select(x => new ServiceParameters
             {
-                launcher.Start(new ServiceParameters
-                {
-                    Name = serviceConfiguration.Name,
-                    Path = serviceConfiguration.Path.Replace("$BasePath$", launchConfiguration.BasePath)
-                });
-            }
-
-
-            var consoleHandler = new ConsoleHandler(() => launcher.StopAll());
-            consoleHandler.Set();
-
-            while (!launcher.IsAllStopped())
-                Thread.Sleep(500);
-
-            consoleHandler.Unset();
+                Name = x.Name,
+                Path = x.Path.Replace("$BasePath$", launchConfiguration.BasePath)
+            });
+            launcher.Start(servicesParameters);
+            launcher.WaitUntilStop();
         }
 
        
