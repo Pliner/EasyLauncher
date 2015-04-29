@@ -36,7 +36,5 @@ namespace EasyLauncher
             launcher.Start(servicesParameters);
             launcher.WaitUntilStop();
         }
-
-       
     }
 }

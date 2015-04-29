@@ -49,7 +49,7 @@ namespace EasyLauncher
                     {
                         output.Info(string.Format("Starting {0}...", serviceParameters.Name));
                         var process = processLauncher.Launch(serviceParameters);
-                        process.OnExit += (sender, args) => output.Error(string.Format("ServiceConfiguration {0} has exited", process.Name));
+                        process.OnExit += (sender, args) => output.Error(string.Format("ServiceConfiguration {0} has stopped", process.Name));
                         processes.Add(process);
                         output.Info(string.Format("Service {0} started", serviceParameters.Name));
                     }
@@ -60,7 +60,6 @@ namespace EasyLauncher
                 }
                 threadSleeper.Sleep(timeout);
             }
-            output.Info("Waiting for services...");
         }
 
         public void WaitUntilStop()
