@@ -5,8 +5,6 @@ namespace EasyLauncher.Configuration.Services.Ini
 {
     public sealed class IniConfigurationParser : IServicesConfigurationParser
     {
-        private const string ServiceKeyPrefix = "Service.";
-
         public ServicesConfiguration Parse(Stream stream)
         {
             var configuration = SharpConfig.Configuration.LoadFromStream(stream);
@@ -17,12 +15,11 @@ namespace EasyLauncher.Configuration.Services.Ini
             {
                 Groups = configuration.Select(section => new ServicesConfigurationGroup
                 {
-                    Name = section.Name ?? Defaults.DefaultGroupName,
+                    Name = section.Name ?? "Default",
                     Priority = groupPriority--,
-                    Services = section.Where(x => x.Name.StartsWith(ServiceKeyPrefix))
-                        .Select(x => new ServiceConfiguration
+                    Services = section.Select(x => new ServiceConfiguration
                         {
-                            Name = x.Name.Replace(ServiceKeyPrefix, ""),
+                            Name = x.Name,
                             Path = x.Value,
                             Priority = sectionPriority--,
                         }).ToArray()

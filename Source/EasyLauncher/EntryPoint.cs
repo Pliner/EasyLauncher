@@ -18,22 +18,22 @@ namespace EasyLauncher
             var threadSleeper = new ThreadSleeper();
             var consoleHandler = new ConsoleHandler();
             var launcher = new ConsoleServicesLauncher(processLauncher, consoleOutput, consoleHandler, threadSleeper);
-            var configurationParser = (launchConfiguration.Type == ServiceConfigurationType.Ini || launchConfiguration.Type == ServiceConfigurationType.Auto)
-                ? (IServicesConfigurationParser)new IniConfigurationParser()
+            var configurationParser = (launchConfiguration.Type == ServiceConfigurationType.Ini ||
+                                       launchConfiguration.Type == ServiceConfigurationType.Auto)
+                ? (IServicesConfigurationParser) new IniConfigurationParser()
                 : new JsonConfigurationParser();
             ServicesConfiguration configuration;
             using (var file = File.OpenRead(launchConfiguration.Filename))
                 configuration = configurationParser.Parse(file);
-            var serviceConfigurations = configuration.Groups
+            var servicesParameters = configuration.Groups
                 .OrderByDescending(x => x.Priority)
                 .Where(x => !launchConfiguration.ExcludeGroups.Contains(x.Name))
-                .SelectMany(x => x.Services)
-                .OrderByDescending(x => x.Priority);
-            var servicesParameters = serviceConfigurations.Select(x => new ServiceParameters
-            {
-                Name = x.Name,                                          
-                Path = x.Path.Replace("$BasePath$", launchConfiguration.BasePath)
-            });
+                .SelectMany(x => x.Services.OrderByDescending(y => y.Priority)
+                    .Select(y => new ServiceParameters
+                    {
+                        Name = y.Name,
+                        Path = y.Path.Replace("$BasePath$", launchConfiguration.BasePath)
+                    }));
             launcher.Start(servicesParameters);
             launcher.WaitUntilStop();
         }

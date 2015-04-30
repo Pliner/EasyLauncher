@@ -55,7 +55,6 @@
     <Compile Include="Configuration\Services\Ini\IniConfigurationParser.cs" />
     <Compile Include="Configuration\Services\IServicesConfigurationParser.cs" />
     <Compile Include="EntryPoint.cs" />
-    <Compile Include="Defaults.cs" />
     <Compile Include="ConsoleHandler.cs" />
     <Compile Include="Output.cs" />
     <Compile Include="Process.cs" />
