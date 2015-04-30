@@ -25,7 +25,7 @@ namespace EasyLauncher.Configuration.Launch
                 return new ServiceLaunchConfiguration
                 {
                     Filename = options.Filename,
-                    Groups = options.Groups,
+                    ExcludeGroups = options.ExcludeGroups,
                     Type = options.Type,
                     BasePath = options.BasePath
                 };
@@ -34,8 +34,8 @@ namespace EasyLauncher.Configuration.Launch
 
         private class Options
         {
-            [OptionArray("groups", DefaultValue = new [] {"Default"})]
-            public string[] Groups { get; set; }
+            [OptionArray("excludeGroups", DefaultValue = new string[0])]
+            public string[] ExcludeGroups { get; set; }
 
             [Option("config", Required = true)]
             public string Filename { get; set; }

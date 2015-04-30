@@ -26,11 +26,12 @@ namespace EasyLauncher
                 configuration = configurationParser.Parse(file);
             var serviceConfigurations = configuration.Groups
                 .OrderByDescending(x => x.Priority)
+                .Where(x => !launchConfiguration.ExcludeGroups.Contains(x.Name))
                 .SelectMany(x => x.Services)
                 .OrderByDescending(x => x.Priority);
             var servicesParameters = serviceConfigurations.Select(x => new ServiceParameters
             {
-                Name = x.Name,
+                Name = x.Name,                                          
                 Path = x.Path.Replace("$BasePath$", launchConfiguration.BasePath)
             });
             launcher.Start(servicesParameters);

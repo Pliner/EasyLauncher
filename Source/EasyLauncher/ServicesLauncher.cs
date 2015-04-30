@@ -19,7 +19,7 @@ namespace EasyLauncher
     public sealed class ConsoleServicesLauncher : IServiceLauncher
     {
         private readonly object syncLock = new object();
-        private readonly TimeSpan timeout = TimeSpan.FromMilliseconds(500);
+        private readonly TimeSpan serviceStartTimeout = TimeSpan.FromMilliseconds(1000);
 
         private readonly List<IProcess> processes = new List<IProcess>(); 
         private readonly IProcessLauncher processLauncher;
@@ -49,7 +49,7 @@ namespace EasyLauncher
                     {
                         output.Info(string.Format("Starting {0}...", serviceParameters.Name));
                         var process = processLauncher.Launch(serviceParameters);
-                        process.OnExit += (sender, args) => output.Error(string.Format("ServiceConfiguration {0} has stopped", process.Name));
+                        process.OnExit += (sender, args) => output.Error(string.Format("Service {0} has stopped", process.Name));
                         processes.Add(process);
                         output.Info(string.Format("Service {0} started", serviceParameters.Name));
                     }
@@ -58,7 +58,7 @@ namespace EasyLauncher
                         output.Error(string.Format("Service {0} failed to start", serviceParameters.Name), exception);
                     }
                 }
-                threadSleeper.Sleep(timeout);
+                threadSleeper.Sleep(serviceStartTimeout);
             }
         }
 
@@ -71,7 +71,7 @@ namespace EasyLauncher
                     if (processes.All(x => x.IsStopped))
                         break;
                 }
-                threadSleeper.Sleep(timeout);
+                threadSleeper.Sleep(serviceStartTimeout);
             }
             consoleHandler.RemoveAll();
         }
