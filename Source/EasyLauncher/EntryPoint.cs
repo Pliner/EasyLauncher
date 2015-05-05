@@ -29,7 +29,7 @@ namespace EasyLauncher
                 .OrderByDescending(x => x.Priority)
                 .Where(x => !launchConfiguration.ExcludeGroups.Contains(x.Name))
                 .SelectMany(x => x.Services.OrderByDescending(y => y.Priority)
-                    .Select(y => new ServiceParameters
+                    .Select(y => new ServiceLaunchParameters
                     {
                         Name = y.Name,
                         Path = y.Path.Replace("$BasePath$", launchConfiguration.BasePath)

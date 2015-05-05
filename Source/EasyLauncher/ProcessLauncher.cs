@@ -5,27 +5,27 @@ namespace EasyLauncher
 {
     public interface IProcessLauncher
     {
-        IProcess Launch(ServiceParameters serviceParameters);
+        IProcess Launch(ServiceLaunchParameters serviceLaunchParameters);
     }
 
     public sealed class ProcessLauncher : IProcessLauncher
     {
-        public IProcess Launch(ServiceParameters serviceParameters)
+        public IProcess Launch(ServiceLaunchParameters serviceLaunchParameters)
         {
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     UseShellExecute = false,
-                    FileName = serviceParameters.Path,
+                    FileName = serviceLaunchParameters.Path,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
-                    WorkingDirectory = new FileInfo(serviceParameters.Path).DirectoryName
+                    WorkingDirectory = new FileInfo(serviceLaunchParameters.Path).DirectoryName
                 },
                 EnableRaisingEvents = true
             };
             process.Start();
-            return new ProcessAdapter(process) { Name = serviceParameters.Name };   
+            return new ProcessAdapter(process) { Name = serviceLaunchParameters.Name };   
         }
     }
 }

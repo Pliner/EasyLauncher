@@ -64,6 +64,7 @@
     <Compile Include="Configuration\Services\ServiceConfiguration.cs" />
     <Compile Include="Configuration\Services\ServicesConfiguration.cs" />
     <Compile Include="Configuration\Services\ServicesConfigurationGroup.cs" />
+    <Compile Include="ServiceLaunchParameters.cs" />
     <Compile Include="ServicesLauncher.cs" />
     <Compile Include="ThreadSleeper.cs" />
   </ItemGroup>

@@ -4,15 +4,9 @@ using System.Linq;
 
 namespace EasyLauncher
 {
-    public sealed class ServiceParameters
-    {
-        public string Name { get; set; }
-        public string Path { get; set; }
-    }
-
     public interface IServiceLauncher
     {
-        void Start(IEnumerable<ServiceParameters> servicesParameters);
+        void Start(IEnumerable<ServiceLaunchParameters> servicesParameters);
         void WaitUntilStop();
     }
 
@@ -20,17 +14,18 @@ namespace EasyLauncher
     {
         private readonly object syncLock = new object();
         private readonly TimeSpan serviceStartTimeout = TimeSpan.FromMilliseconds(1000);
+        private volatile bool isStarted = false;
 
-        private readonly List<IProcess> processes = new List<IProcess>(); 
+        private readonly List<IProcess> processes = new List<IProcess>();
         private readonly IProcessLauncher processLauncher;
         private readonly IOutput output;
         private readonly IConsoleHandler consoleHandler;
         private readonly IThreadSleeper threadSleeper;
 
         public ConsoleServicesLauncher(IProcessLauncher processLauncher,
-                               IOutput output, 
-                               IConsoleHandler consoleHandler,
-                               IThreadSleeper threadSleeper)
+            IOutput output,
+            IConsoleHandler consoleHandler,
+            IThreadSleeper threadSleeper)
         {
             this.processLauncher = processLauncher;
             this.output = output;
@@ -38,18 +33,24 @@ namespace EasyLauncher
             this.threadSleeper = threadSleeper;
         }
 
-        public void Start(IEnumerable<ServiceParameters> servicesParameters)
+        public void Start(IEnumerable<ServiceLaunchParameters> servicesParameters)
         {
-            consoleHandler.AddStopHandler(StopAll);
-            foreach (var serviceParameters in servicesParameters)
+            lock (syncLock)
             {
-                lock (syncLock)
+                consoleHandler.AddStopHandler(StopAll);
+                output.Info("Launching services...\r\n");
+                foreach (var serviceParameters in servicesParameters)
                 {
                     try
                     {
                         output.Info(string.Format("Starting {0}...", serviceParameters.Name));
                         var process = processLauncher.Launch(serviceParameters);
-                        process.OnExit += (sender, args) => output.Error(string.Format("Service {0} has stopped", process.Name));
+                        process.OnExit += (sender, args) =>
+                        {
+                            if (isStarted)
+                                return;
+                            output.Error(string.Format("Service {0} has stopped", process.Name));
+                        };
                         processes.Add(process);
                         output.Info(string.Format("Service {0} started", serviceParameters.Name));
                     }
@@ -57,8 +58,10 @@ namespace EasyLauncher
                     {
                         output.Error(string.Format("Service {0} failed to start", serviceParameters.Name), exception);
                     }
+                    threadSleeper.Sleep(serviceStartTimeout);
                 }
-                threadSleeper.Sleep(serviceStartTimeout);
+                output.Info("\r\nServices were launched");
+                isStarted = true;
             }
         }
 
@@ -74,6 +77,7 @@ namespace EasyLauncher
                 threadSleeper.Sleep(serviceStartTimeout);
             }
             consoleHandler.RemoveAll();
+            output.Info("\r\nServices were stopped");
         }
 
         private void StopAll()
