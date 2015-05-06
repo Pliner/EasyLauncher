@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Management;
 
 namespace EasyLauncher
 {
@@ -29,7 +30,25 @@ namespace EasyLauncher
 
         public void Kill()
         {
-            process.Kill();
+            KillProcessAndChildren(process.Id);
+        }
+
+        private static void KillProcessAndChildren(int pid)
+        {
+            var processSearcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid);
+            foreach (var proccess in processSearcher.Get())
+            {
+                var managementObject = (ManagementObject) proccess;
+                KillProcessAndChildren(Convert.ToInt32(managementObject["ProcessID"]));
+            }
+            try
+            {
+                var process = Process.GetProcessById(pid);
+                process.Kill();
+            }
+            catch
+            {
+            }
         }
 
         public event EventHandler OnExit

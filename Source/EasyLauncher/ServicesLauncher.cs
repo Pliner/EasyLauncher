@@ -52,11 +52,11 @@ namespace EasyLauncher
                             output.Error(string.Format("Service {0} has stopped", process.Name));
                         };
                         processes.Add(process);
-                        output.Info(string.Format("Service {0} started", serviceParameters.Name));
+                        output.Info(string.Format("Service {0} launched", serviceParameters.Name));
                     }
                     catch (Exception exception)
                     {
-                        output.Error(string.Format("Service {0} failed to start", serviceParameters.Name), exception);
+                        output.Error(string.Format("Service {0} failed to launch", serviceParameters.Name), exception);
                     }
                     threadSleeper.Sleep(serviceStartTimeout);
                 }
@@ -90,9 +90,8 @@ namespace EasyLauncher
                     {
                         process.Kill();
                     }
-                    catch (Exception exception)
+                    catch
                     {
-                        output.Error(string.Format("Service {0} failed to stop", process.Name), exception);
                     }
                 }
                 processes.Clear();
