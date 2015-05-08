@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,44 +15,50 @@ namespace EasyLauncher
     {
         private readonly object syncLock = new object();
         private readonly TimeSpan serviceStartTimeout = TimeSpan.FromMilliseconds(1000);
-        private volatile bool isStarted = false;
 
-        private readonly List<IProcess> processes = new List<IProcess>();
+        private readonly ConcurrentDictionary<IProcess, object> processes = new ConcurrentDictionary<IProcess, object>();
         private readonly IProcessLauncher processLauncher;
         private readonly IOutput output;
         private readonly IConsoleHandler consoleHandler;
+        private readonly IServiceLauncherStatus status;
         private readonly IThreadSleeper threadSleeper;
 
         public ConsoleServicesLauncher(IProcessLauncher processLauncher,
             IOutput output,
             IConsoleHandler consoleHandler,
+            IServiceLauncherStatus status,
             IThreadSleeper threadSleeper)
         {
             this.processLauncher = processLauncher;
             this.output = output;
             this.consoleHandler = consoleHandler;
+            this.status = status;
             this.threadSleeper = threadSleeper;
         }
 
         public void Start(IEnumerable<ServiceLaunchParameters> servicesParameters)
         {
-            lock (syncLock)
+            if (status.TryChangeState(ServiceLauncherState.Stopped, ServiceLauncherState.Starting))
             {
                 consoleHandler.AddStopHandler(StopAll);
                 output.Info("Launching services...\r\n");
                 foreach (var serviceParameters in servicesParameters)
                 {
+                    if (!status.HasState(ServiceLauncherState.Starting))
+                        return;
                     try
                     {
                         output.Info(string.Format("Starting {0}...", serviceParameters.Name));
                         var process = processLauncher.Launch(serviceParameters);
                         process.OnExit += (sender, args) =>
                         {
-                            if (isStarted)
+                            object value;
+                            processes.TryRemove(process, out value);
+                            if (status.HasState(ServiceLauncherState.Stopping))
                                 return;
-                            output.Error(string.Format("Service {0} has stopped", process.Name));
+                            output.Error(string.Format("Service {0} has exited", process.Name));
                         };
-                        processes.Add(process);
+                        processes.TryAdd(process, null);
                         output.Info(string.Format("Service {0} launched", serviceParameters.Name));
                     }
                     catch (Exception exception)
@@ -60,8 +67,8 @@ namespace EasyLauncher
                     }
                     threadSleeper.Sleep(serviceStartTimeout);
                 }
+                status.ChangeState(ServiceLauncherState.Started);
                 output.Info("\r\nServices were launched");
-                isStarted = true;
             }
         }
 
@@ -69,11 +76,8 @@ namespace EasyLauncher
         {
             while (true)
             {
-                lock (syncLock)
-                {
-                    if (processes.All(x => x.IsStopped))
-                        break;
-                }
+                if (status.HasState(ServiceLauncherState.Stopped))
+                    break;
                 threadSleeper.Sleep(serviceStartTimeout);
             }
             consoleHandler.RemoveAll();
@@ -82,19 +86,21 @@ namespace EasyLauncher
 
         private void StopAll()
         {
-            lock (syncLock)
+            if (status.TryChangeState(ServiceLauncherState.Started, ServiceLauncherState.Stopping) || status.TryChangeState(ServiceLauncherState.Starting, ServiceLauncherState.Stopping))
             {
                 foreach (var process in processes)
                 {
                     try
                     {
-                        process.Kill();
+                        process.Key.Kill();
                     }
                     catch
                     {
                     }
+                    object value;
+                    processes.TryRemove(process.Key, out value);
                 }
-                processes.Clear();
+                status.ChangeState(ServiceLauncherState.Stopped);
             }
         }
     }

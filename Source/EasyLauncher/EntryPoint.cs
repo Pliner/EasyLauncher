@@ -17,7 +17,8 @@ namespace EasyLauncher
             var consoleOutput = new ConsoleOutput();
             var threadSleeper = new ThreadSleeper();
             var consoleHandler = new ConsoleHandler();
-            var launcher = new ConsoleServicesLauncher(processLauncher, consoleOutput, consoleHandler, threadSleeper);
+            var serviceLauncherStatus = new ServiceLauncherStatus();
+            var launcher = new ConsoleServicesLauncher(processLauncher, consoleOutput, consoleHandler, serviceLauncherStatus, threadSleeper);
             var configurationParser = (launchConfiguration.Type == ServiceConfigurationType.Ini ||
                                        launchConfiguration.Type == ServiceConfigurationType.Auto)
                 ? (IServicesConfigurationParser) new IniConfigurationParser()
