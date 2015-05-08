@@ -1,31 +1,41 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using EasyLauncher.Configuration.Services;
 
 namespace EasyLauncher
 {
     public interface IProcessLauncher
     {
-        IProcess Launch(ServiceLaunchParameters serviceLaunchParameters);
+        IProcess Launch(ServiceConfiguration service);
     }
 
     public sealed class ProcessLauncher : IProcessLauncher
     {
-        public IProcess Launch(ServiceLaunchParameters serviceLaunchParameters)
+        private readonly ITemplateSubstitutor templateSubstitutor;
+
+        public ProcessLauncher(ITemplateSubstitutor templateSubstitutor)
         {
+            this.templateSubstitutor = templateSubstitutor;
+        }
+
+        public IProcess Launch(ServiceConfiguration service)
+        {
+            var path = templateSubstitutor.Substitute(service.Path);
+            var name = templateSubstitutor.Substitute(service.Name);
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     UseShellExecute = false,
-                    FileName = serviceLaunchParameters.Path,
+                    FileName = path,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
-                    WorkingDirectory = new FileInfo(serviceLaunchParameters.Path).DirectoryName
+                    WorkingDirectory = new FileInfo(path).DirectoryName
                 },
                 EnableRaisingEvents = true
             };
             process.Start();
-            return new ProcessAdapter(process) { Name = serviceLaunchParameters.Name };   
+            return new ProcessAdapter(process) { Name = name };   
         }
     }
 }

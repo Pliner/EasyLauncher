@@ -23,7 +23,7 @@ namespace EasyLauncher
 
         public bool TryChangeState(ServiceLauncherState fromState, ServiceLauncherState toState)
         {
-            return Interlocked.CompareExchange(ref internalState, (int)fromState, (int)toState) == (int) fromState;
+            return Interlocked.CompareExchange(ref internalState, (int)toState, (int)fromState) == (int) fromState;
         }
 
         public void ChangeState(ServiceLauncherState state)

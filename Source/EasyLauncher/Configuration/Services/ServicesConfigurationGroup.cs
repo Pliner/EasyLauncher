@@ -1,4 +1,6 @@
-﻿namespace EasyLauncher.Configuration.Services
+﻿using System;
+
+namespace EasyLauncher.Configuration.Services
 {
     public class ServicesConfigurationGroup
     {
@@ -7,6 +9,8 @@
         public string Name { get; set; }
 
         public int Priority { get; set; }
+
+        public TimeSpan Timeout { get; set; }
 
         public ServiceConfiguration[] Services
         {

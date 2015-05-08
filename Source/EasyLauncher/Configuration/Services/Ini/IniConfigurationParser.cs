@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace EasyLauncher.Configuration.Services.Ini
@@ -13,16 +14,30 @@ namespace EasyLauncher.Configuration.Services.Ini
 
             return new ServicesConfiguration
             {
-                Groups = configuration.Select(section => new ServicesConfigurationGroup
+                Groups = configuration.Select(section =>
                 {
-                    Name = section.Name ?? "Default",
-                    Priority = groupPriority--,
-                    Services = section.Select(x => new ServiceConfiguration
+                    var complexSectionName = section.Name ?? "Default";
+                    var complexSectionParts = complexSectionName.Split('|');
+                    var groupName = complexSectionParts.First();
+                    var timeout = complexSectionParts
+                        .Skip(1)
+                        .Take(1)
+                        .Select(int.Parse)
+                        .Select(x => TimeSpan.FromSeconds(x))
+                        .DefaultIfEmpty(TimeSpan.FromSeconds(1))
+                        .First();
+                    return new ServicesConfigurationGroup
+                    {
+                        Name = groupName,
+                        Priority = groupPriority--,
+                        Timeout = timeout,
+                        Services = section.Select(x => new ServiceConfiguration
                         {
                             Name = x.Name,
                             Path = x.Value,
                             Priority = sectionPriority--,
                         }).ToArray()
+                    };
                 }).ToArray()
             };
         }

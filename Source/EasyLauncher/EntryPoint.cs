@@ -1,5 +1,5 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.IO;
 using EasyLauncher.Configuration.Launch;
 using EasyLauncher.Configuration.Services;
 using EasyLauncher.Configuration.Services.Ini;
@@ -13,29 +13,28 @@ namespace EasyLauncher
         {
             var launchConfigurationParser = new ConsoleServiceLaunchConfigurationParser(args);
             var launchConfiguration = launchConfigurationParser.Parse();
-            var processLauncher = new ProcessLauncher();
             var consoleOutput = new ConsoleOutput();
             var threadSleeper = new ThreadSleeper();
             var consoleHandler = new ConsoleHandler();
             var serviceLauncherStatus = new ServiceLauncherStatus();
-            var launcher = new ConsoleServicesLauncher(processLauncher, consoleOutput, consoleHandler, serviceLauncherStatus, threadSleeper);
             var configurationParser = (launchConfiguration.Type == ServiceConfigurationType.Ini ||
                                        launchConfiguration.Type == ServiceConfigurationType.Auto)
                 ? (IServicesConfigurationParser) new IniConfigurationParser()
                 : new JsonConfigurationParser();
+            var templates = new Dictionary<string, string>
+            {
+                {
+                    "$BasePath$", launchConfiguration.BasePath
+                }
+            };
+            var templateSubstitutor = new TemplateSubstitutor(templates);
+            var processLauncher = new ProcessLauncher(templateSubstitutor);
+            var launcher = new ConsoleServicesLauncher(processLauncher, consoleOutput, consoleHandler, serviceLauncherStatus, threadSleeper);
             ServicesConfiguration configuration;
             using (var file = File.OpenRead(launchConfiguration.Filename))
                 configuration = configurationParser.Parse(file);
-            var servicesParameters = configuration.Groups
-                .OrderByDescending(x => x.Priority)
-                .Where(x => !launchConfiguration.ExcludeGroups.Contains(x.Name))
-                .SelectMany(x => x.Services.OrderByDescending(y => y.Priority)
-                    .Select(y => new ServiceLaunchParameters
-                    {
-                        Name = y.Name,
-                        Path = y.Path.Replace("$BasePath$", launchConfiguration.BasePath)
-                    }));
-            launcher.Start(servicesParameters);
+
+            launcher.Start(configuration);
             launcher.WaitUntilStop();
         }
     }

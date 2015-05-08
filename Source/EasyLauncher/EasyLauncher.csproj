@@ -58,6 +58,7 @@
     <Compile Include="Configuration\Services\IServicesConfigurationParser.cs" />
     <Compile Include="EntryPoint.cs" />
     <Compile Include="ConsoleHandler.cs" />
+    <Compile Include="Extentions.cs" />
     <Compile Include="Output.cs" />
     <Compile Include="Process.cs" />
     <Compile Include="ProcessLauncher.cs" />
@@ -67,13 +68,16 @@
     <Compile Include="Configuration\Services\ServicesConfiguration.cs" />
     <Compile Include="Configuration\Services\ServicesConfigurationGroup.cs" />
     <Compile Include="ServiceLauncherStatus.cs" />
-    <Compile Include="ServiceLaunchParameters.cs" />
     <Compile Include="ServicesLauncher.cs" />
+    <Compile Include="TemplateSubstitutor.cs" />
     <Compile Include="ThreadSleeper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="services.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

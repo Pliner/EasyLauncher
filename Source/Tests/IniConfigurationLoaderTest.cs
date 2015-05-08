@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using EasyLauncher.Configuration;
 using EasyLauncher.Configuration.Services.Ini;
 using NUnit.Framework;
@@ -31,8 +32,8 @@ namespace Tests
         public void ShouldLoadFullConfiguration()
         {
             using (var stream = @"
-                [GroupName]
-                Service.ServiceName = ServicePath
+                [GroupName|8]
+                ServiceName = ServicePath
                 ".ToMemoryStream())
             {
                 var configuration = parser.Parse(stream);
@@ -42,6 +43,7 @@ namespace Tests
                 Assert.AreEqual("GroupName", group.Name);
                 Assert.AreEqual(0, group.Priority);
                 Assert.AreEqual(1, group.Services.Count());
+                Assert.AreEqual(TimeSpan.FromSeconds(8), group.Timeout);
                 var service = group.Services[0];
                 Assert.AreEqual("ServiceName", service.Name);
                 Assert.AreEqual("ServicePath", service.Path);
