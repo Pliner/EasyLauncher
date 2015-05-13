@@ -59,11 +59,11 @@ namespace EasyLauncher
                                 output.Error(string.Format("Service {0} has exited", process.Name));
                             };
                             processes.Add(process);
-                            output.Info(string.Format("Service {0} launched", servicesGroup.Name));
+                            output.Info(string.Format("Service {0} launched", service.Name));
                         }
                         catch (Exception exception)
                         {
-                            output.Error(string.Format("Service {0} failed to launch", servicesGroup.Name), exception);
+                            output.Error(string.Format("Service {0} failed to launch", service.Name), exception);
                         }
                     }
                     threadSleeper.Sleep(servicesGroup.Timeout);
@@ -89,6 +89,7 @@ namespace EasyLauncher
         {
             if (status.TryChangeState(ServiceLauncherState.Started, ServiceLauncherState.Stopping) || status.TryChangeState(ServiceLauncherState.Starting, ServiceLauncherState.Stopping))
             {
+                output.Info("\r\nStopping services...");
                 foreach (var process in processes)
                 {
                     try

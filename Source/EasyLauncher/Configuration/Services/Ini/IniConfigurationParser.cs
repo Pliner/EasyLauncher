@@ -18,19 +18,13 @@ namespace EasyLauncher.Configuration.Services.Ini
                 {
                     var complexSectionName = section.Name ?? "Default";
                     var complexSectionParts = complexSectionName.Split('|');
-                    var groupName = complexSectionParts.First();
-                    var timeout = complexSectionParts
-                        .Skip(1)
-                        .Take(1)
-                        .Select(int.Parse)
-                        .Select(x => TimeSpan.FromSeconds(x))
-                        .DefaultIfEmpty(TimeSpan.FromSeconds(1))
-                        .First();
+                    var groupName = complexSectionParts.ElementAt(0);
+                    var timeoutSeconds = int.Parse(complexSectionParts.ElementAtOrDefault(1) ?? "1");
                     return new ServicesConfigurationGroup
                     {
                         Name = groupName,
                         Priority = groupPriority--,
-                        Timeout = timeout,
+                        Timeout = TimeSpan.FromSeconds(timeoutSeconds),
                         Services = section.Select(x => new ServiceConfiguration
                         {
                             Name = x.Name,
