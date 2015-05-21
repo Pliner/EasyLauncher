@@ -1,7 +1,15 @@
+platform: Any CPU
+
+configuration: Release
+
 build:
+  parallel: true 
   project: Source\EasyLauncher.sln
   verbosity: minimal
   publish_nuget: false  
+
+before_build:
+  - nuget restore
 
 test: off                   
 
