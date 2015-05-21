@@ -1,0 +1,7 @@
+build:
+  project: Source\EasyLauncher.sln
+  verbosity: minimal
+  publish_nuget: false  
+
+test: off                   
+
