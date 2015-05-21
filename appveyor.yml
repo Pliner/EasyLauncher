@@ -8,8 +8,5 @@ build:
   verbosity: minimal
   publish_nuget: false  
 
-before_build:
-  - nuget restore
-
 test: off                   
 
