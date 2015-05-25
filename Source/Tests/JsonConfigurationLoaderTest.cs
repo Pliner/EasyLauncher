@@ -24,7 +24,7 @@ namespace Tests
         {
             using (var stream = 
                 @"{
-                Defaults : [
+                Groups : [
                     {
                         Name: 'Group',
                         Priority: 2,
