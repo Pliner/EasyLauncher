@@ -7,7 +7,6 @@ namespace EasyLauncher
     public interface IProcess
     {
         string Name { get; }
-        bool IsStopped { get; }
         void Kill();
         event EventHandler OnExit;
     }
@@ -23,11 +22,6 @@ namespace EasyLauncher
 
         public string Name { get; set; }
 
-        public bool IsStopped
-        {
-            get { return process.HasExited; }
-        }
-
         public void Kill()
         {
             KillProcessTree(process.Id);
@@ -35,14 +29,14 @@ namespace EasyLauncher
 
         private static void KillProcessTree(int pid)
         {
-            var processSearcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid);
-            foreach (var proccess in processSearcher.Get())
-            {
-                var managementObject = (ManagementObject) proccess;
-                KillProcessTree(Convert.ToInt32(managementObject["ProcessID"]));
-            }
             try
             {
+                var processSearcher = new ManagementObjectSearcher("Select * From Win32_Process Where ParentProcessID=" + pid);
+                foreach (var proccess in processSearcher.Get())
+                {
+                    var managementObject = (ManagementObject)proccess;
+                    KillProcessTree(Convert.ToInt32(managementObject["ProcessID"]));
+                }
                 var process = Process.GetProcessById(pid);
                 process.Kill();
             }
