@@ -22,12 +22,15 @@ namespace EasyLauncher
         {
             var path = templateSubstitutor.Substitute(service.Path);
             var name = templateSubstitutor.Substitute(service.Name);
+            var arguments = templateSubstitutor.Substitute(service.Argments);
+
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
                     UseShellExecute = false,
                     FileName = path,
+                    Arguments = arguments,
                     CreateNoWindow = true,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     WorkingDirectory = new FileInfo(path).DirectoryName
