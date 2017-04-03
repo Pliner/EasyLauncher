@@ -19,7 +19,9 @@ namespace EasyLauncher
 
         public string Substitute(string value)
         {
-            return templates.Aggregate(value, (current, template) => current.Replace(template.Key, template.Value));
+            return string.IsNullOrEmpty(value)
+                ? value
+                : templates.Aggregate(value, (current, template) => current.Replace(template.Key, template.Value));
         }
     }
 }
